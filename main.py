@@ -10,8 +10,8 @@ def main():
 
     if maximal_graph_flag:
         # Create maximal graph
-        degree = 6
-        levels = 6
+        degree = 4
+        levels = 4
         add_repeats = True
         graph, data = make_maximal_graph(degree, levels, add_repeats)
     else:
@@ -26,12 +26,12 @@ def main():
     for node in df.index:
         if df.loc[node]['IsMajor']:
             colour_values.append('red')
-        elif df.loc[node]['IsTypeB']:
-            colour_values.append('yellow')
-        elif df.loc[node]['IsTypeD']:
-            colour_values.append('green')
-        elif df.loc[node]['IsTypeE']:
-            colour_values.append('orange')
+        # elif df.loc[node]['IsTypeB']:
+        #     colour_values.append('yellow')
+        # elif df.loc[node]['IsTypeD']:
+        #     colour_values.append('green')
+        # elif df.loc[node]['IsTypeE']:
+        #     colour_values.append('orange')
         else:
             colour_values.append('blue')
 
@@ -42,6 +42,7 @@ def main():
     pos = hierarchy_pos(graph, 0)
     nx.draw(graph, pos=pos, with_labels=True, labels=labels, node_color=colour_values)
     plt.show()
+    print('nothing')
 
 
 def make_maximal_graph(degree, levels, add_repeats=True):
