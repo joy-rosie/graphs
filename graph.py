@@ -3,6 +3,8 @@ import numpy as np
 import networkx as nx
 from itertools import chain
 
+vertex_index_name = 'vertex_index'
+
 
 def list_validator(input_data):
     output = input_data
@@ -14,7 +16,7 @@ def list_validator(input_data):
 def make_vertex_index(input_list=None):
     if input_list is None:
         input_list = list()
-    return pd.Index(input_list, name='vertex_index', dtype='int64')
+    return pd.Index(input_list, name=vertex_index_name, dtype='int64')
 
 
 class Graph:
@@ -134,6 +136,15 @@ class Graph:
 
     def get_neighbours(self):
         self._vdf['neighbours'] = self.edf.apply(lambda row: row.index[row == 1].tolist(), axis=1)
+
+    def get_second_neighbours(self):
+        self.get_neighbours()
+
+        self._vdf['second_neighbours'] = self.vdf['neighbours']\
+            .apply(lambda neighbours: set(chain.from_iterable(
+                [self.vdf.loc[vertex, 'neighbours'] for vertex in neighbours])))
+        self._vdf['second_neighbours'] = self._vdf['second_neighbours'].reset_index().apply(
+            lambda row: list(row['second_neighbours'] - {row[vertex_index_name]}), axis=1)
 
     def __len__(self):
         return self.size

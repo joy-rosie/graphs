@@ -198,3 +198,10 @@ def test_get_neighbours():
     g.get_neighbours()
     expected_df = pd.DataFrame({'neighbours': [[1], [0, 2], [1], [], []]}, index=make_vertex_index(list(range(5))))
     pd.testing.assert_series_equal(g.vdf['neighbours'], expected_df['neighbours'])
+
+
+def test_get_second_neighbours():
+    g = Graph(vertices=[0, 1, 2, 3, 4], edges=[(0, 1), (1, 2)])
+    g.get_second_neighbours()
+    expected_df = pd.DataFrame({'second_neighbours': [[2], [], [0], [], []]}, index=make_vertex_index(list(range(5))))
+    pd.testing.assert_series_equal(g.vdf['second_neighbours'], expected_df['second_neighbours'])
