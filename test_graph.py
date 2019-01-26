@@ -48,6 +48,36 @@ def test_add_vertices():
     assert g.vertices == [0, 1, 2, 3]
 
 
+def test_remove_vertices():
+    g = Graph()
+    g.remove_vertices()
+    pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
+    assert g.vertices == []
+
+    g.remove_vertices(vertices=[0, 1])
+    pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
+    assert g.vertices == []
+
+    g = Graph(vertices=[0, 1, 2])
+    g.remove_vertices(vertices=[0, 1])
+    pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([2])))
+    assert g.vertices == [2]
+
+    g.remove_vertices(vertices=2)
+    pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
+    assert g.vertices == []
+
+    g = Graph(n_vertices=10)
+    g.remove_vertices(vertices=list(range(10)))
+    pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
+    assert g.vertices == []
+
+    g = Graph(n_vertices=10)
+    g.remove_vertices(vertices=list(range(100)))
+    pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
+    assert g.vertices == []
+
+
 def test_add_vertex_attributes():
     g = Graph(vertices=[0, 1])
     g.add_vertex_attributes()
@@ -75,18 +105,68 @@ def test_add_vertices_with_vertex_attributes():
 
 
 def test_add_edges():
+
     g = Graph(vertices=0)
+
     g.add_edges(edges=[0, 0])
     pd.testing.assert_frame_equal(g.edf, pd.DataFrame(1, index=[0], columns=[0]))
+
     g.add_edges(edges=(1, 0))
     pd.testing.assert_frame_equal(g.edf, pd.DataFrame({0: [1, 1], 1: [1, 0]}, index=[0, 1], columns=[0, 1]))
     assert g.vertices == [0, 1]
+
     g.add_edges(edges=[(0, 1), [1, 1]])
     pd.testing.assert_frame_equal(g.edf, pd.DataFrame({0: [1, 1], 1: [1, 1]}, index=[0, 1], columns=[0, 1]))
 
 
-# def test_edf():
-#
-#     g = Graph(vertices=[0, 1])
-#     g.edf.loc[0, 1] = 1
-#     assert g._edf.loc[0, 1] == 1 and g.edf.loc[0, 1] == 1 and g._edf.loc[1, 0] == 1 and g.edf.loc[1, 0] == 1
+def test_remove_edges():
+
+    g = Graph(edges=[[0, 0]])
+    g.remove_edges(edges=[[0, 0]])
+    assert g.edges == set() and g.vertices == [0]
+
+    g = Graph(edges=[[1, 0]])
+    g.remove_edges(edges=[[0, 1]])
+    assert g.edges == set() and g.vertices == [0, 1]
+
+    g = Graph(edges=[[0, 0], [0, 1]])
+    g.remove_edges(edges=[[1, 0]])
+    assert g.edges == {(0, 0)} and g.vertices == [0, 1]
+
+    g = Graph(edges=[[0, 0], [0, 1], [1, 1]])
+    g.remove_edges(edges=[(0, 0), [1, 0]])
+    assert g.edges == {(1, 1)} and g.vertices == [0, 1]
+
+
+def test_size_len():
+    g = Graph()
+    assert g.size == 0 and len(g) == 0
+
+    g = Graph(n_vertices=4)
+    assert g.size == 4 and len(g) == 4
+
+    g.remove_vertices(vertices=[2, 3])
+    assert g.size == 2 and len(g) == 2
+
+    g.add_edges(edges=[0, 2])
+    assert g.size == 3 and len(g) == 3
+
+    g.remove_vertices(vertices=[0, 1, 2])
+    assert g.size == 0 and len(g) == 0
+
+
+def test_degree():
+    g = Graph()
+    assert g.degree == 0
+
+    g = Graph(edges=[0, 0])
+    assert g.degree == 1
+
+    g.add_edges(edges=[0, 1])
+    assert g.degree == 2
+
+    g.remove_edges(edges=[0, 1])
+    assert g.degree == 1
+
+    g.remove_edges(edges=[0, 0])
+    assert g.degree == 0
