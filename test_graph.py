@@ -19,33 +19,41 @@ def test_add_vertices():
     g = Graph()
     g.add_vertices()
     assert g.vertices == []
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [])
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
     g.add_vertices([0])
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([0])))
     assert g.vertices == [0]
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [0])
     g.add_vertices(1)
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([0, 1])))
     assert g.vertices == [0, 1]
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [0, 1])
     g.add_vertices([3, 2])
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([0, 1, 2, 3])))
     assert g.vertices == [0, 1, 2, 3]
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [0, 1, 2, 3])
     g.add_vertices(3)
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([0, 1, 2, 3])))
     assert g.vertices == [0, 1, 2, 3]
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [0, 1, 2, 3])
 
     g = Graph(vertices=[0, 1, 2])
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([0, 1, 2])))
     assert g.vertices == [0, 1, 2]
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [0, 1, 2])
 
     g = Graph()
     g.add_vertices(n_vertices=3)
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([0, 1, 2])))
     assert g.vertices == [0, 1, 2]
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [0, 1, 2])
 
     g = Graph(vertices=[0])
     g.add_vertices(n_vertices=3)
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([0, 1, 2, 3])))
     assert g.vertices == [0, 1, 2, 3]
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [0, 1, 2, 3])
 
 
 def test_remove_vertices():
@@ -53,29 +61,35 @@ def test_remove_vertices():
     g.remove_vertices()
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
     assert g.vertices == []
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [])
 
     g.remove_vertices(vertices=[0, 1])
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
     assert g.vertices == []
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [])
 
     g = Graph(vertices=[0, 1, 2])
     g.remove_vertices(vertices=[0, 1])
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index([2])))
     assert g.vertices == [2]
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [2])
 
     g.remove_vertices(vertices=2)
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
     assert g.vertices == []
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [])
 
     g = Graph(n_vertices=10)
     g.remove_vertices(vertices=list(range(10)))
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
     assert g.vertices == []
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [])
 
     g = Graph(n_vertices=10)
     g.remove_vertices(vertices=list(range(100)))
     pd.testing.assert_frame_equal(g.vdf, pd.DataFrame(index=make_vertex_index()))
     assert g.vertices == []
+    assert compare_lists_unordered(list(g.nx_graph.nodes), [])
 
 
 def test_add_vertex_attributes():
@@ -170,3 +184,17 @@ def test_degree():
 
     g.remove_edges(edges=[0, 0])
     assert g.degree == 0
+
+
+def test_get_node_degrees():
+    g = Graph(vertices=[0, 1, 2, 3, 4], edges=[(0, 1), (1, 2)])
+    g.get_node_degrees()
+    expected_df = pd.DataFrame({'degree': [1, 2, 1, 0, 0]}, index=make_vertex_index(list(range(5))))
+    pd.testing.assert_series_equal(g.vdf['degree'], expected_df['degree'], check_dtype=False)
+
+
+def test_get_neighbours():
+    g = Graph(vertices=[0, 1, 2, 3, 4], edges=[(0, 1), (1, 2)])
+    g.get_neighbours()
+    expected_df = pd.DataFrame({'neighbours': [[1], [0, 2], [1], [], []]}, index=make_vertex_index(list(range(5))))
+    pd.testing.assert_series_equal(g.vdf['neighbours'], expected_df['neighbours'])

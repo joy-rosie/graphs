@@ -21,18 +21,22 @@ class Graph:
 
     _vdf = None
     _edges = None
-    _defaults_for_attributes = None
+    _nx_graph = None
 
     def initialise(self):
         self._vdf = pd.DataFrame(index=make_vertex_index())
         self._edges = set()
-        self._defaults_for_attributes = dict()
+        self._nx_graph = nx.Graph()
 
     def __init__(self, vertices=None, n_vertices=None, vertex_attributes=None, edges=None):
         self.initialise()
         self.add_vertices(vertices=vertices, n_vertices=n_vertices)
         self.add_vertex_attributes(vertex_attributes=vertex_attributes)
         self.add_edges(edges=edges)
+
+    @property
+    def nx_graph(self):
+        return self._nx_graph
 
     @property
     def vdf(self):
@@ -65,13 +69,14 @@ class Graph:
 
         if vertices is not None:
             vertices = list_validator(vertices)
-
+            self._nx_graph.add_nodes_from(vertices)
             new_index = pd.Index(vertices)
             vertex_index = make_vertex_index(new_index[~new_index.isin(self.vdf.index)]).unique()
             self._vdf = pd.concat([self.vdf, pd.DataFrame(index=vertex_index)], axis=1).sort_index()
 
     def remove_vertices(self, vertices=None):
         vertices = list_validator(vertices)
+        self._nx_graph.remove_nodes_from(vertices)
         self._vdf = self.vdf.loc[~self._vdf.index.isin(vertices), :]
 
     @property
@@ -100,6 +105,7 @@ class Graph:
             self.add_vertices(vertices=list(chain.from_iterable(edges)))
             edges = set(edges)
             self._add_modified_edges(edges)
+            self._nx_graph.add_edges_from(edges)
             self._edges.update(edges)
 
     @staticmethod
@@ -119,9 +125,15 @@ class Graph:
     def degree(self):
         return int(np.nan_to_num(np.nanmax([self.edf.sum(axis=1).max(), self.edf.sum(axis=0).max()])))
 
+    def get_node_degrees(self):
+        self._vdf['degree'] = self.edf.sum(axis=1)
+
     @property
     def size(self):
         return len(self.vertices)
+
+    def get_neighbours(self):
+        self._vdf['neighbours'] = self.edf.apply(lambda row: row.index[row == 1].tolist(), axis=1)
 
     def __len__(self):
         return self.size
