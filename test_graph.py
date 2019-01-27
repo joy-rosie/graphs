@@ -124,13 +124,16 @@ def test_add_edges():
 
     g.add_edges(edges=[0, 0])
     pd.testing.assert_frame_equal(g.edf, pd.DataFrame(1, index=[0], columns=[0]))
+    assert compare_lists_unordered(list(g.nx_graph.edges), [(0, 0)])
 
     g.add_edges(edges=(1, 0))
     pd.testing.assert_frame_equal(g.edf, pd.DataFrame({0: [1, 1], 1: [1, 0]}, index=[0, 1], columns=[0, 1]))
     assert g.vertices == [0, 1]
+    assert compare_lists_unordered(list(g.nx_graph.edges), [(0, 0), (0, 1)])
 
     g.add_edges(edges=[(0, 1), [1, 1]])
     pd.testing.assert_frame_equal(g.edf, pd.DataFrame({0: [1, 1], 1: [1, 1]}, index=[0, 1], columns=[0, 1]))
+    assert compare_lists_unordered(list(g.nx_graph.edges), [(0, 0), (0, 1), (1, 1)])
 
 
 def test_remove_edges():
@@ -138,18 +141,22 @@ def test_remove_edges():
     g = Graph(edges=[[0, 0]])
     g.remove_edges(edges=[[0, 0]])
     assert g.edges == set() and g.vertices == [0]
+    assert compare_lists_unordered(list(g.nx_graph.edges), [])
 
     g = Graph(edges=[[1, 0]])
     g.remove_edges(edges=[[0, 1]])
     assert g.edges == set() and g.vertices == [0, 1]
+    assert compare_lists_unordered(list(g.nx_graph.edges), [])
 
     g = Graph(edges=[[0, 0], [0, 1]])
     g.remove_edges(edges=[[1, 0]])
     assert g.edges == {(0, 0)} and g.vertices == [0, 1]
+    assert compare_lists_unordered(list(g.nx_graph.edges), [(0, 0)])
 
     g = Graph(edges=[[0, 0], [0, 1], [1, 1]])
     g.remove_edges(edges=[(0, 0), [1, 0]])
     assert g.edges == {(1, 1)} and g.vertices == [0, 1]
+    assert compare_lists_unordered(list(g.nx_graph.edges), [(1, 1)])
 
 
 def test_size_len():
@@ -205,3 +212,15 @@ def test_get_second_neighbours():
     g.get_second_neighbours()
     expected_df = pd.DataFrame({'second_neighbours': [[2], [], [0], [], []]}, index=make_vertex_index(list(range(5))))
     pd.testing.assert_series_equal(g.vdf['second_neighbours'], expected_df['second_neighbours'])
+
+
+def test_get_second_degree():
+    g = Graph(vertices=[0, 1, 2, 3, 4], edges=[(0, 1), (1, 2)])
+    g.get_second_degree()
+    expected_df = pd.DataFrame({'second_degree': [1, 0, 1, 0, 0]}, index=make_vertex_index(list(range(5))))
+    pd.testing.assert_series_equal(g.vdf['second_degree'], expected_df['second_degree'])
+
+
+def test_draw():
+    g = Graph(vertices=[0, 1, 2, 3, 4], edges=[(0, 1), (1, 2)])
+    g.draw()

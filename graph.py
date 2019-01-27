@@ -107,12 +107,12 @@ class Graph:
             self.add_vertices(vertices=list(chain.from_iterable(edges)))
             edges = set(edges)
             self._add_modified_edges(edges)
-            self._nx_graph.add_edges_from(edges)
+            self._nx_graph.add_edges_from(list(edges))
             self._edges.update(edges)
 
     @staticmethod
     def _add_modified_edges(edges):
-        edges .update({(edge[1], edge[0]) for edge in edges})
+        edges.update({(edge[1], edge[0]) for edge in edges})
 
     def remove_edges(self, edges=None):
         if edges is not None:
@@ -121,6 +121,7 @@ class Graph:
                 edges = [edges]
             edges = set((edge[0], edge[1]) for edge in edges)
             self._add_modified_edges(edges)
+            self._nx_graph.remove_edges_from(list(edges))
             self._edges = self._edges - edges
 
     @property
@@ -146,6 +147,19 @@ class Graph:
         self._vdf['second_neighbours'] = self._vdf['second_neighbours'].reset_index().apply(
             lambda row: list(row['second_neighbours'] - {row[vertex_index_name]}), axis=1)
 
+    def get_second_degree(self):
+        self.get_second_neighbours()
+        self._vdf['second_degree'] = self.vdf['second_neighbours'].apply(lambda neighbours: len(neighbours))
+
+    def draw(self, pos=None, with_labels=None, colour_values=None):
+        if pos is True:
+            pos = hierarchy_pos(self.nx_graph, 0)
+        if with_labels is True:
+            labels = self.vdf['label'].todict()
+        else:
+            labels = None
+        nx.draw(self.nx_graph, pos=pos, with_labels=True, labels=labels, node_color=colour_values)
+
     def __len__(self):
         return self.size
 
@@ -154,3 +168,34 @@ class Graph:
 
     def __repr__(self):
         return self.__str__()
+
+
+# Makes the positions of the nodes look pretty
+def hierarchy_pos(graph, root, width=1., vertical_gap=0.2, vertical_loc=0, x_center=0.5,
+                  pos=None, parent=None):
+    """If there is a cycle that is reachable from root, then this will see infinite recursion.
+       graph: the graph
+       root: the root node of current branch
+       width: horizontal space allocated for this branch - avoids overlap with other branches
+       vertical_gap: gap between levels of hierarchy
+       vertical_loc: vertical location of root
+       x_center: horizontal location of root
+       pos: a dict saying where all nodes go if they have been assigned
+       parent: parent of this branch."""
+
+    if pos is None:
+        pos = {root: (x_center, vertical_loc)}
+    else:
+        pos[root] = (x_center, vertical_loc)
+    neighbors = list(graph.neighbors(root))
+    if parent is not None:   # this should be removed for directed graphs.
+        neighbors.remove(parent)  # if directed, then parent not in neighbors.
+    if len(neighbors) != 0:
+        dx = width/len(neighbors)
+        next_x = x_center - width / 2 - dx / 2
+        for neighbor in neighbors:
+            next_x += dx
+            pos = hierarchy_pos(graph, neighbor, width=dx, vertical_gap=vertical_gap,
+                                vertical_loc=vertical_loc - vertical_gap, x_center=next_x, pos=pos,
+                                parent=root)
+    return pos
