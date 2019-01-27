@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import networkx as nx
 from itertools import chain
+from random import randint
 
 vertex_index_name = 'vertex_index'
 
@@ -166,6 +167,32 @@ class Graph:
     def from_nx_graph(self, nx_graph):
         self.add_vertices(vertices=list(nx_graph.nodes))
         self.add_edges(edges=list(nx_graph.edges))
+
+    def add_random_level(self, degree):
+        self.get_node_degrees()
+        max_level = self.vdf['level'].max()
+        max_level_vertices = self.vdf.index[self.vdf['level'] == max_level]
+        for vertex in max_level_vertices:
+            vertex_degree = self.vdf.loc[vertex, 'degree']
+            if degree > vertex_degree:
+                n_edges_minus_one = randint(1, degree-vertex_degree)
+                max_node = self.vdf.index.max()
+                edges = [(vertex, item) for item in range(max_node + 1, max_node + n_edges_minus_one + 1)]
+                self.add_edges(edges=edges)
+                self._vdf.loc[[edge[1] for edge in edges], 'level'] = max_level + 1
+
+    def make_random_tree(self, n_levels=3, degree=3):
+        self.add_vertex_attributes(vertex_attributes='level')
+        if self.size == 0:
+            self.add_vertices(n_vertices=1)
+        max_vertex = self.vdf.index.max()
+        self.get_node_degrees()
+        self._vdf.loc[max_vertex, 'level'] = 0
+        edges = [(max_vertex, max_vertex + item) for item in range(1, degree - self.vdf.loc[max_vertex, 'degree'] + 1)]
+        self.add_edges(edges=edges)
+        self._vdf.loc[self._vdf.index.isin([edge[1] for edge in edges]), 'level'] = 1
+        for _ in range(n_levels-1):
+            self.add_random_level(degree=degree)
 
     def __len__(self):
         return self.size

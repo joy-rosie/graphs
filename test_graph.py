@@ -2,6 +2,7 @@ import pytest
 import pandas as pd
 import networkx as nx
 from collections import Counter
+import random
 
 from graph import Graph
 from graph import make_vertex_index
@@ -234,3 +235,38 @@ def test_from_nx_graph():
         g.from_nx_graph(nx_graph=nx_graph)
         assert compare_lists_unordered(g.vertices, list(nx_graph.nodes))
         assert compare_lists_unordered(g.edges, list(set(nx_graph.edges).union({(edge[1], edge[0]) for edge in nx_graph.edges})))
+
+
+def test_add_level():
+    g = Graph(n_vertices=1, vertex_attributes='level')
+    g._vdf.loc[0, 'level'] = 1
+    random.seed(0)
+    g.add_random_level(degree=3)
+    assert g.vertices == [0, 1, 2]
+    assert compare_lists_unordered(g.edges, [(0, 1), (1, 0), (0, 2), (2, 0)])
+
+    g.add_random_level(degree=0)
+    assert g.vertices == [0, 1, 2]
+    assert compare_lists_unordered(g.edges, [(0, 1), (1, 0), (0, 2), (2, 0)])
+
+    g.add_random_level(degree=1)
+    assert g.vertices == [0, 1, 2]
+    assert compare_lists_unordered(g.edges, [(0, 1), (1, 0), (0, 2), (2, 0)])
+
+    g.add_random_level(degree=2)
+    assert g.vertices == [0, 1, 2, 3, 4]
+    assert compare_lists_unordered(g.edges, [(0, 1), (1, 0), (0, 2), (2, 0), (1, 3), (3, 1), (2, 4), (4, 2)])
+
+
+def test_make_random_tree():
+    g = Graph()
+    random.seed(0)
+    g.make_random_tree(n_levels=1, degree=3)
+    assert g.vertices == [0, 1, 2, 3]
+    assert compare_lists_unordered(g.edges, [(0, 1), (1, 0), (0, 2), (2, 0), (0, 3), (3, 0)])
+
+    g = Graph()
+    g.make_random_tree(n_levels=2, degree=3)
+    assert g.vertices == [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    assert compare_lists_unordered(g.edges, [(0, 1), (1, 0), (0, 2), (2, 0), (0, 3), (3, 0), (1, 4), (4, 1), (1, 5),
+                                             (5, 1), (2, 6), (6, 2), (2, 7), (7, 2), (3, 8), (8, 3)])
