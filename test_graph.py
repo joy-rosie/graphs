@@ -228,8 +228,9 @@ def test_draw():
 
 
 def test_from_nx_graph():
-    nx_graph = nx.random_tree(10)
-    g = Graph()
-    g.from_nx_graph(nx_graph=nx_graph)
-    assert compare_lists_unordered(g.vertices, list(nx_graph.nodes))
-    assert compare_lists_unordered(g.edges, list(set(nx_graph.edges).union({(edge[1], edge[0]) for edge in nx_graph.edges})))
+    for _ in range(10):
+        nx_graph = nx.random_tree(10)
+        g = Graph()
+        g.from_nx_graph(nx_graph=nx_graph)
+        assert compare_lists_unordered(g.vertices, list(nx_graph.nodes))
+        assert compare_lists_unordered(g.edges, list(set(nx_graph.edges).union({(edge[1], edge[0]) for edge in nx_graph.edges})))
