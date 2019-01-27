@@ -1,5 +1,6 @@
 import pytest
 import pandas as pd
+import networkx as nx
 from collections import Counter
 
 from graph import Graph
@@ -224,3 +225,11 @@ def test_get_second_degree():
 def test_draw():
     g = Graph(vertices=[0, 1, 2, 3, 4], edges=[(0, 1), (1, 2)])
     g.draw()
+
+
+def test_from_nx_graph():
+    nx_graph = nx.random_tree(10)
+    g = Graph()
+    g.from_nx_graph(nx_graph=nx_graph)
+    assert compare_lists_unordered(g.vertices, list(nx_graph.nodes))
+    assert compare_lists_unordered(g.edges, list(set(nx_graph.edges).union({(edge[1], edge[0]) for edge in nx_graph.edges})))

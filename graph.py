@@ -30,11 +30,14 @@ class Graph:
         self._edges = set()
         self._nx_graph = nx.Graph()
 
-    def __init__(self, vertices=None, n_vertices=None, vertex_attributes=None, edges=None):
+    def __init__(self, vertices=None, n_vertices=None, vertex_attributes=None, edges=None, nx_graph=None):
         self.initialise()
-        self.add_vertices(vertices=vertices, n_vertices=n_vertices)
-        self.add_vertex_attributes(vertex_attributes=vertex_attributes)
-        self.add_edges(edges=edges)
+        if nx_graph is not None:
+            self.from_nx_graph(nx_graph=nx_graph)
+        else:
+            self.add_vertices(vertices=vertices, n_vertices=n_vertices)
+            self.add_vertex_attributes(vertex_attributes=vertex_attributes)
+            self.add_edges(edges=edges)
 
     @property
     def nx_graph(self):
@@ -159,6 +162,10 @@ class Graph:
         else:
             labels = None
         nx.draw(self.nx_graph, pos=pos, with_labels=True, labels=labels, node_color=colour_values)
+
+    def from_nx_graph(self, nx_graph):
+        self.add_vertices(vertices=list(nx_graph.nodes))
+        self.add_edges(edges=list(nx_graph.edges))
 
     def __len__(self):
         return self.size
